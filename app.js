@@ -1,6 +1,9 @@
+if (!window.pdfjsLib) { alert("PDF.js failed to load. Check your internet connection and refresh."); }
+
 pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.6.82/pdf.worker.min.js";
 
 const els = {
+  openBtn: document.getElementById("openBtn"),
   file: document.getElementById("file"),
   pdfCanvas: document.getElementById("pdfCanvas"),
   overlay: document.getElementById("overlay"),
@@ -483,6 +486,10 @@ function addSymbol(){
   updateSummary();
   toast(`Added symbol: ${key}`);
 }
+
+els.openBtn.addEventListener("click", ()=>{
+  els.file.click();
+});
 
 els.file.addEventListener("change", (e)=>{
   const f = e.target.files && e.target.files[0];
