@@ -1,3 +1,9 @@
+// NOTE: iOS Safari + GitHub Pages can sometimes block PDF.js web worker loading.
+// Disabling the worker makes loading more reliable (a bit slower for huge PDFs).
+if (window.pdfjsLib) {
+  try { pdfjsLib.disableWorker = true; } catch(e) {}
+}
+
 if (!window.pdfjsLib) { alert("PDF.js failed to load. Check your internet connection and refresh."); }
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.6.82/pdf.worker.min.js";
@@ -8,6 +14,7 @@ const els = {
   pdfCanvas: document.getElementById("pdfCanvas"),
   overlay: document.getElementById("overlay"),
   pgLabel: document.getElementById("pgLabel"),
+  fileStatus: document.getElementById("fileStatus"),
   prevPg: document.getElementById("prevPg"),
   nextPg: document.getElementById("nextPg"),
   toolCount: document.getElementById("toolCount"),
@@ -159,8 +166,20 @@ function updateSummary(){
 }
 
 async function loadPdf(file){
+  try {
+    if (els.fileStatus) els.fileStatus.textContent = `${file.name} (${Math.round(file.size/1024)} KB)`;
+  } catch(e) {}
+
   const ab = await file.arrayBuffer();
-  pdfDoc = await pdfjsLib.getDocument({data: ab}).promise;
+  let loadingTask;
+  try {
+    loadingTask = pdfjsLib.getDocument({data: ab});
+    pdfDoc = await loadingTask.promise;
+  } catch (err) {
+    console.error(err);
+    toast(`PDF load failed: ${err && err.message ? err.message : err}`);
+    return;
+  }
   pageNum = 1;
   toast(`Loaded PDF (${pdfDoc.numPages} pages)`);
   await renderPage(pageNum);
